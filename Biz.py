@@ -1,3 +1,5 @@
+# Import necessary libraries
+
 import streamlit as st
 import easyocr
 import cv2
@@ -9,6 +11,7 @@ import psycopg2
 from PIL import Image
 import io
 
+# Connect to PostgreSQL database
 
 mydb = psycopg2.connect(host="localhost",
                         user="postgres",
@@ -18,6 +21,8 @@ mydb = psycopg2.connect(host="localhost",
                         )
 cursor = mydb.cursor()
 reader = easyocr.Reader(['en'], gpu = False)
+
+# Configure Streamlit page layout
 
 st.set_page_config(page_title="Bizcard", page_icon="",layout="wide", initial_sidebar_state="expanded")
 st.markdown(
@@ -34,6 +39,8 @@ st.markdown(
     unsafe_allow_html=True
 )
 st.title("Bizcard")
+
+# Function to extract data from OCR result
 
 def data_extrac(extract):
     for i in range(len(extract)):
@@ -98,6 +105,8 @@ def data_extrac(extract):
     info = [name, designation, company, email, website, primary, secondary, address, pincode, result]
     return (info)
 
+# Sidebar menu for different sections
+
 with st.sidebar:
     selected = option_menu(
         menu_title="Get Started Here",  # required
@@ -108,6 +117,9 @@ with st.sidebar:
         styles={"nav-link": {"--hover-color": "brown"}},
         orientation="vertical",
     )
+
+# Handling different sections based on the selected option
+
 if selected == 'Home':
     st.subheader("Welcome to the BizCard Project! ")
     
@@ -121,8 +133,9 @@ elif selected == 'Upload':
         with col1:
             result = reader.readtext(image, detail=0)
             info = data_extrac(result)
-            st.table(pd.Series(info, index=['Name', 'Designation', 'Company', 'Email ID', 'Website', 'Primary Contact', 'Secondary Contact', 'Address', 'Pincode', 'Other'],name='Card Info'))
             
+            st.dataframe(pd.Series(info, index=['Name', 'Designation', 'Company', 'Email ID', 'Website', 'Primary Contact', 'Secondary Contact', 'Address', 'Pincode', 'Other'], name='Card Info').apply(str))
+
             ls_name = st.text_input('Name:',info[0])
             ls_desig = st.text_input('Designation:', info[1])
             ls_Com = st.text_input('Company:', info[2])
@@ -165,7 +178,7 @@ elif selected == 'View/Modify':
                          f"address, pincode from business_cards where name = '{selected_contact}'")
             y = cursor.fetchall()
         
-            st.table(pd.Series(y[0],index=['Name', 'Designation', 'Company', 'Email ID', 'Website', 'Primary Contact', 'Secondary Contact', 'Address', 'Pincode'],name='Card Info'))
+            st.dataframe(pd.Series(y[0],index=['Name', 'Designation', 'Company', 'Email ID', 'Website', 'Primary Contact', 'Secondary Contact', 'Address', 'Pincode'],name='Card Info'))
 
     elif selected_mode == 'Modify':
         cursor.execute(f"select name, designation, company, email, website, primary_no, secondary_no, "
@@ -221,7 +234,6 @@ elif selected == 'About':
     st.write("  * Python")
     st.write("  * PostgresSql")
     st.write("  * Streamlit")
-    st.write("  * Github")
     st.write("  * Pandas, EasyOCR, Re, CV2, Psycopg2")
     
     
